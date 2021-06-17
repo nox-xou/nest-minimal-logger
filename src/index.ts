@@ -1,4 +1,4 @@
-import { LoggerService } from '@nestjs/common';
+import { Logger, LoggerService } from '@nestjs/common';
 import * as colors from 'colors/safe';
 
 const defaultOptions: Intl.DateTimeFormatOptions = {
@@ -13,31 +13,40 @@ const defaultOptions: Intl.DateTimeFormatOptions = {
   timeZoneName: 'short',
 };
 
-export class MinimalLogger implements LoggerService {
+export class MinimalLogger extends Logger {
   private date: Intl.DateTimeFormat = null;
 
-  constructor(locale?: string, options?: Intl.DateTimeFormatOptions) {
+  constructor(
+    context?: string,
+    isTimestampEnabled?: boolean,
+    locale?: string,
+    options?: Intl.DateTimeFormatOptions,
+  ) {
+    super(context, isTimestampEnabled);
     const opt = { ...defaultOptions, ...(options || {}) };
     this.date = new Intl.DateTimeFormat(locale || 'en', opt);
   }
 
-  log(message: string) {
-    console.log(colors.white(this.format(message)));
+  log(message: string, context?: string) {
+    console.log(colors.white(this.format(message, context)));
   }
-  error(message: string, ...args: any[]) {
-    console.log(colors.red(this.format(message)));
+  error(message: string, trace?: string, context?: string) {
+    console.log(colors.red(this.format(message, context)));
   }
-  warn(message: string) {
-    console.log(colors.yellow(this.format(message)));
+  warn(message: string, context?: string) {
+    console.log(colors.yellow(this.format(message, context)));
   }
-  debug(message: string) {
-    console.log(colors.cyan(this.format(message)));
+  debug(message: string, context?: string) {
+    console.log(colors.cyan(this.format(message, context)));
   }
-  verbose(message: string) {
-    console.log(colors.grey(this.format(message)));
+  verbose(message: string, context?: string) {
+    console.log(colors.grey(this.format(message, context)));
   }
 
-  private format(message: string) {
-    return `${this.date.format(new Date())} ${message}`;
+  private format(message: string, context?: string) {
+    context = context || this.context;
+    let text = context ? `[${context}] ` : '';
+    text += message;
+    return `${this.date.format(new Date())} ${text}`;
   }
 }
